@@ -3,236 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Invitation - Rizky & Amelia</title>
+    <title>The Wedding of Rizky & Amelia</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="/_sdk/element_sdk.js"></script>
     <script src="/_sdk/data_sdk.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a12; --surface: #1a1a2e; --text: #f0e6d3; 
-            --primary: #c9956b; --accent: #e8a0bf;
+            --primary: #c9956b; --dark: #0a0a12; --light: #fdf6ee;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Cormorant Garamond', serif; overflow: hidden; height: 100vh; }
+        * { scroll-behavior: smooth; }
+        body { background: var(--dark); color: var(--light); font-family: 'Cormorant Garamond', serif; overflow: hidden; }
         
-        #main-content { height: 100%; overflow-y: auto; scroll-behavior: smooth; display: none; position: relative; z-index: 10; }
+        #main-content { height: 100vh; overflow-y: auto; display: none; position: relative; z-index: 10; scroll-snap-type: y proximity; }
+        
+        /* Background Animations */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; opacity: 0.6; }
 
-        /* Canvas Background */
-        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-
-        /* Real-time Toast Notification */
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; pointer-events: none; }
-        .toast { background: rgba(201, 149, 107, 0.9); color: #000; padding: 10px 20px; border-radius: 30px; font-size: 12px; font-weight: bold; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideDown 0.5s ease forwards, fadeOut 0.5s ease 3s forwards; }
-
-        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
-
-        /* Envelope & Cover (Data Tetap) */
-        #cover-page { height: 100%; width: 100%; position: fixed; top: 0; left: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1028 0%, #0a0a12 100%); transition: 1s cubic-bezier(0.65, 0, 0.35, 1); }
+        /* Cover & Envelope */
+        #cover-page { height: 100vh; width: 100%; position: fixed; top: 0; left: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #0a0a12 100%); transition: 1.2s cubic-bezier(0.7, 0, 0.3, 1); }
         #cover-page.hidden { transform: translateY(-100%); }
 
-        .envelope-body { width: 280px; height: 180px; background: linear-gradient(135deg, var(--primary), #8b6f5a); border-radius: 8px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .envelope-flap { width: 0; height: 0; border-left: 140px solid transparent; border-right: 140px solid transparent; border-top: 110px solid #b8845e; position: absolute; top: 0; z-index: 2; transform-origin: top; transition: 0.6s; }
+        .envelope-body { width: 300px; height: 200px; background: linear-gradient(135deg, #c9956b, #8b6f5a); border-radius: 10px; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.8); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .envelope-flap { width: 0; height: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 120px solid #b8845e; position: absolute; top: 0; z-index: 2; transform-origin: top; transition: 0.6s; }
         .envelope-flap.open { transform: rotateX(180deg); }
 
-        /* Reveal Animations */
-        .reveal { opacity: 0; transform: scale(0.9); transition: all 1s ease; }
-        .reveal.visible { opacity: 1; transform: scale(1); }
+        /* Content Styling */
+        .section-padding { padding: 80px 24px; }
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 1s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .nav-btn.active { background: var(--primary); color: white; transform: scale(1.1); }
+        
+        .story-line::before { content: ''; position: absolute; left: 50%; width: 1px; height: 100%; background: var(--primary); opacity: 0.3; }
 
-        .nav-btn.active { color: var(--primary); transform: scale(1.2); }
-        .music-btn { position: fixed; top: 20px; right: 20px; z-index: 2500; width: 45px; height: 45px; background: rgba(201,149,107,0.2); border-radius: 50%; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .rotating { animation: spin 4s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Custom Scrollbar */
+        #main-content::-webkit-scrollbar { width: 4px; }
+        #main-content::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <canvas id="particle-canvas"></canvas>
-    <div id="toast-container"></div>
+    <canvas id="bg-canvas"></canvas>
 
     <audio id="bg-music" loop>
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
     </audio>
-
-    <div id="music-control" class="music-btn" onclick="toggleMusic()">
-        <i data-lucide="music" id="music-icon" class="rotating"></i>
+    <div id="music-control" class="fixed top-6 right-6 z-[2500] hidden">
+        <button onclick="toggleMusic()" class="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center">
+            <i data-lucide="music" id="music-icon" class="w-5 text-[#c9956b]"></i>
+        </button>
     </div>
 
     <div id="cover-page">
-        <div class="text-center p-6 space-y-8">
+        <div class="text-center space-y-8 px-6">
             <div class="space-y-2">
-                <p id="greeting" class="uppercase tracking-[0.5em] text-[#c9956b] text-xs"></p>
-                <p class="text-[10px] opacity-50">Kepada Bapak/Ibu/Saudara/i:</p>
-                <h2 id="guest-name" class="text-2xl font-bold tracking-widest">Tamu Spesial</h2>
+                <p id="greeting-time" class="uppercase tracking-[0.4em] text-[#c9956b] text-xs"></p>
+                <p class="text-xs opacity-50 font-['Montserrat']">KAMI MENGUNDANG ANDA:</p>
+                <h2 id="guest-name" class="text-3xl font-bold tracking-widest text-white">Tamu Spesial</h2>
             </div>
 
-            <h1 class="text-7xl md:text-8xl font-['Great_Vibes'] text-[#c9956b]">Rizky & Amelia</h1>
+            <div class="py-10">
+                <h3 class="text-lg tracking-[0.3em] font-light mb-2">THE WEDDING OF</h3>
+                <h1 class="text-7xl md:text-9xl font-['Great_Vibes'] text-[#c9956b]">Rizky & Amelia</h1>
+            </div>
 
-            <div class="envelope-wrap mx-auto w-[280px]" onclick="openEnvelope()">
-                <div class="envelope-body">
-                    <div class="envelope-flap" id="flap"></div>
-                    <div id="envelope-text" class="text-white text-center z-10 transition-opacity duration-500">
-                        <i data-lucide="mail-open" class="mx-auto mb-2 opacity-50"></i>
-                        <p class="text-[10px] tracking-[0.3em] uppercase">Buka Undangan</p>
+            <div class="envelope-wrap mx-auto" onclick="openEnvelope()">
+                <div class="envelope-body group hover:scale-105">
+                    <div id="flap" class="envelope-flap"></div>
+                    <div class="text-white text-center z-10">
+                        <i data-lucide="mail-open" class="mx-auto mb-2 w-8 opacity-40"></i>
+                        <p class="text-[10px] tracking-[0.4em] uppercase font-['Montserrat']">Klik Untuk Membuka</p>
                     </div>
                 </div>
             </div>
 
-            <button id="open-btn" onclick="openInvitation()" class="hidden px-12 py-4 bg-[#c9956b] text-black rounded-full font-bold uppercase tracking-tighter text-xs hover:bg-white transition-all transform hover:scale-110 shadow-xl">
-                Enter Invitation
+            <button id="open-btn" onclick="openInvitation()" class="hidden px-14 py-4 bg-[#c9956b] text-black rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-white transition-all transform hover:scale-110 shadow-2xl animate-bounce">
+                Buka Undangan
             </button>
         </div>
     </div>
 
-    <div id="main-content" onscroll="syncScroll()">
-        <section id="hero" class="min-h-screen flex flex-col items-center justify-center p-10 text-center">
-            <div class="reveal">
-                <p class="text-[#c9956b] mb-6 tracking-[0.5em]">WALIMATUL 'URSY</p>
-                <h2 id="auto-type" class="text-6xl md:text-8xl font-['Great_Vibes'] text-[#c9956b] mb-4"></h2>
-                <div class="w-24 h-[1px] bg-[#c9956b] mx-auto my-6"></div>
-                <p class="italic opacity-60">"Maka nikmat Tuhanmu manakah yang kamu dustakan?"</p>
+    <div id="main-content" onscroll="syncNav()">
+        
+        <section id="opening" class="min-h-screen flex flex-col items-center justify-center section-padding text-center">
+            <div class="reveal max-w-2xl">
+                <i data-lucide="quote" class="mx-auto mb-8 text-[#c9956b] opacity-40"></i>
+                <p class="text-xl md:text-2xl leading-relaxed italic mb-8 font-light">
+                    "Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya."
+                </p>
+                <p class="font-['Montserrat'] text-xs tracking-widest opacity-60">QS. AR-RUM: 21</p>
             </div>
         </section>
 
-        <section id="timer" class="py-20 bg-white/5">
-            <div class="max-w-screen-md mx-auto px-6">
-                <div class="grid grid-cols-4 gap-4 text-center reveal">
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-2xl">
-                        <span id="d" class="text-3xl font-bold block">0</span>
-                        <span class="text-[10px] opacity-50 uppercase">Hari</span>
+        <section id="couple" class="section-padding bg-white/[0.02]">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl font-['Playfair_Display'] text-[#c9956b]">Mempelai Berbahagia</h2>
+                <div class="w-20 h-[1px] bg-[#c9956b] mx-auto mt-4"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-16 max-w-5xl mx-auto px-6">
+                <div class="text-center reveal">
+                    <div class="w-48 h-48 mx-auto rounded-full border-4 border-[#c9956b] p-2 mb-6">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&h=200&fit=crop" class="w-full h-full object-cover rounded-full">
                     </div>
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-2xl">
-                        <span id="h" class="text-3xl font-bold block">0</span>
-                        <span class="text-[10px] opacity-50 uppercase">Jam</span>
+                    <h3 class="text-3xl font-['Great_Vibes'] text-[#c9956b] mb-2">Rizky Pratama, S.T.</h3>
+                    <p class="text-sm opacity-60 mb-4">Putra Pertama dari:</p>
+                    <p class="font-bold">Bapak Ahmad Sulaiman & Ibu Siti Aminah</p>
+                </div>
+
+                <div class="text-center reveal">
+                    <div class="w-48 h-48 mx-auto rounded-full border-4 border-[#c9956b] p-2 mb-6">
+                        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=200&h=200&fit=crop" class="w-full h-full object-cover rounded-full">
                     </div>
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-2xl">
-                        <span id="m" class="text-3xl font-bold block">0</span>
-                        <span class="text-[10px] opacity-50 uppercase">Menit</span>
+                    <h3 class="text-3xl font-['Great_Vibes'] text-[#c9956b] mb-2">Amelia Putri, S.E.</h3>
+                    <p class="text-sm opacity-60 mb-4">Putri Kedua dari:</p>
+                    <p class="font-bold">Bapak Hendra Wijaya & Ibu Rina Kartika</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="story" class="section-padding">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl font-['Playfair_Display'] text-[#c9956b]">Kisah Cinta Kami</h2>
+            </div>
+            
+            <div class="max-w-3xl mx-auto px-6 relative story-line">
+                <div class="flex flex-col space-y-12">
+                    <div class="reveal flex items-center justify-between w-full">
+                        <div class="w-5/12 text-right">
+                            <h4 class="font-bold text-[#c9956b]">Pertama Bertemu</h4>
+                            <p class="text-xs opacity-60 italic">Mei 2022</p>
+                        </div>
+                        <div class="z-10 w-4 h-4 rounded-full bg-[#c9956b]"></div>
+                        <div class="w-5/12 bg-white/5 p-4 rounded-xl">
+                            <p class="text-xs">Pertemuan pertama kami di bangku kuliah, berawal dari tugas kelompok yang sama.</p>
+                        </div>
                     </div>
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-2xl">
-                        <span id="s" class="text-3xl font-bold block">0</span>
-                        <span class="text-[10px] opacity-50 uppercase">Detik</span>
+                    <div class="reveal flex items-center justify-between w-full flex-row-reverse">
+                        <div class="w-5/12 text-left">
+                            <h4 class="font-bold text-[#c9956b]">Komitmen</h4>
+                            <p class="text-xs opacity-60 italic">Januari 2024</p>
+                        </div>
+                        <div class="z-10 w-4 h-4 rounded-full bg-[#c9956b]"></div>
+                        <div class="w-5/12 bg-white/5 p-4 rounded-xl">
+                            <p class="text-xs">Kami memutuskan untuk menjalin hubungan yang lebih serius dan berkomitmen.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="gift" class="py-24 px-6 text-center">
-            <div class="reveal max-w-sm mx-auto bg-gradient-to-br from-white/10 to-transparent p-8 rounded-[40px] border border-white/20 shadow-inner">
-                <i data-lucide="gift" class="mx-auto mb-6 text-[#c9956b]"></i>
-                <h3 class="text-2xl font-['Playfair_Display'] mb-4">Digital Gift</h3>
-                <p class="text-xs opacity-60 mb-8">Terima kasih atas tanda kasih Anda</p>
-                <div class="bg-black/40 p-5 rounded-2xl flex justify-between items-center group cursor-pointer" onclick="copyAcc('12345678')">
-                    <div class="text-left">
-                        <p class="text-[9px] uppercase opacity-50">Transfer Bank BCA</p>
-                        <p class="font-bold tracking-widest" id="acc-num">1234 5678 90</p>
+        <section id="event" class="section-padding bg-white/[0.02] text-center">
+            <div class="reveal mb-12">
+                <h2 class="text-4xl font-['Playfair_Display'] text-[#c9956b]">Waktu & Lokasi</h2>
+                <div id="countdown" class="flex justify-center gap-4 mt-10">
+                    <div class="bg-white/5 w-16 h-16 rounded-lg flex flex-col justify-center border border-white/10 shadow-lg">
+                        <span id="d" class="text-xl font-bold">0</span><span class="text-[8px] uppercase">Hari</span>
                     </div>
-                    <i data-lucide="copy" class="w-4 opacity-50 group-hover:opacity-100 transition"></i>
+                    <div class="bg-white/5 w-16 h-16 rounded-lg flex flex-col justify-center border border-white/10">
+                        <span id="h" class="text-xl font-bold">0</span><span class="text-[8px] uppercase">Jam</span>
+                    </div>
+                    <div class="bg-white/5 w-16 h-16 rounded-lg flex flex-col justify-center border border-white/10">
+                        <span id="m" class="text-xl font-bold">0</span><span class="text-[8px] uppercase">Menit</span>
+                    </div>
+                    <div class="bg-white/5 w-16 h-16 rounded-lg flex flex-col justify-center border border-white/10">
+                        <span id="s" class="text-xl font-bold">0</span><span class="text-[8px] uppercase">Detik</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto px-6">
+                <div class="reveal bg-white/5 p-8 rounded-3xl border border-white/10">
+                    <h3 class="text-2xl font-bold text-[#c9956b] mb-4">Akad Nikah</h3>
+                    <p class="text-sm mb-2">Minggu, 15 Agustus 2025</p>
+                    <p class="text-sm mb-6">08.00 - 10.00 WIB</p>
+                    <p class="text-xs opacity-60">Gedung Grand Ballroom Mawar<br>Jl. Melati No. 123, Jakarta</p>
+                    <button class="mt-6 px-6 py-2 border border-[#c9956b] rounded-full text-[10px] uppercase tracking-widest hover:bg-[#c9956b] hover:text-black transition">Buka Map</button>
+                </div>
+                <div class="reveal bg-white/5 p-8 rounded-3xl border border-white/10">
+                    <h3 class="text-2xl font-bold text-[#c9956b] mb-4">Resepsi</h3>
+                    <p class="text-sm mb-2">Minggu, 15 Agustus 2025</p>
+                    <p class="text-sm mb-6">11.00 - Selesai WIB</p>
+                    <p class="text-xs opacity-60">Gedung Grand Ballroom Mawar<br>Jl. Melati No. 123, Jakarta</p>
+                    <button class="mt-6 px-6 py-2 border border-[#c9956b] rounded-full text-[10px] uppercase tracking-widest hover:bg-[#c9956b] hover:text-black transition">Simpan Kalender</button>
                 </div>
             </div>
         </section>
 
-        <section id="rsvp" class="py-24 px-6 max-w-xl mx-auto">
-            <div class="reveal">
-                <div class="flex items-center justify-between mb-10">
-                    <h3 class="text-3xl font-['Playfair_Display']">Wishes</h3>
-                    <div class="text-[10px] border border-[#c9956b]/30 px-4 py-1 rounded-full text-[#c9956b]">
-                        <span id="wish-count">0</span> PESAN TERKIRIM
-                    </div>
-                </div>
+        <section id="gallery" class="section-padding">
+            <h2 class="text-center text-4xl font-['Playfair_Display'] text-[#c9956b] mb-12 reveal">Momen Bahagia</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 px-2 max-w-5xl mx-auto reveal">
+                <img src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=400" class="w-full h-64 object-cover rounded-lg">
+                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=400" class="w-full h-64 object-cover rounded-lg">
+                <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=400" class="w-full h-64 object-cover rounded-lg">
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=400" class="w-full h-64 object-cover rounded-lg col-span-2">
+                <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=400" class="w-full h-64 object-cover rounded-lg">
+            </div>
+        </section>
+
+        <section id="gift" class="section-padding bg-[#c9956b]/10 text-center">
+            <div class="reveal max-w-md mx-auto">
+                <i data-lucide="gift" class="mx-auto mb-6 text-[#c9956b] w-12 h-12"></i>
+                <h2 class="text-3xl font-['Playfair_Display'] mb-4">Kado Digital</h2>
+                <p class="text-sm opacity-70 mb-10">Kehadiran Anda adalah kado terindah bagi kami, namun jika ingin memberikan tanda kasih secara digital dapat melalui:</p>
                 
-                <form id="rsvp-form" onsubmit="handleRSVP(event)" class="space-y-5">
-                    <input type="text" id="name" placeholder="Nama Lengkap" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl focus:border-[#c9956b] outline-none transition" required>
-                    <textarea id="msg" placeholder="Tulis doa restu..." class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl focus:border-[#c9956b] outline-none h-32 transition" required></textarea>
-                    <button class="w-full bg-[#c9956b] text-black font-bold py-5 rounded-2xl hover:bg-white transition shadow-lg flex items-center justify-center gap-3">
-                        Kirim Pesan <i data-lucide="send" class="w-4"></i>
+                <div class="space-y-4">
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/20 flex justify-between items-center group cursor-pointer" onclick="copyAcc('123456789')">
+                        <div class="text-left">
+                            <p class="text-[10px] uppercase font-bold text-[#c9956b]">Bank BCA</p>
+                            <p class="text-xl tracking-widest font-bold">123 456 789</p>
+                            <p class="text-xs opacity-50">a.n Rizky Pratama</p>
+                        </div>
+                        <i data-lucide="copy" class="w-4 opacity-30 group-hover:opacity-100 transition"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="rsvp" class="section-padding">
+            <div class="max-w-xl mx-auto px-6 reveal">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-['Playfair_Display'] mb-2">Buku Tamu</h2>
+                    <p class="text-xs opacity-50 uppercase tracking-widest">Berikan doa restu Anda</p>
+                </div>
+
+                <form id="rsvp-form" onsubmit="handleRSVP(event)" class="space-y-4">
+                    <input type="text" id="name" placeholder="Nama Anda" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl focus:border-[#c9956b] outline-none transition" required>
+                    <textarea id="msg" placeholder="Tulis ucapan & doa..." class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl focus:border-[#c9956b] outline-none h-32 transition" required></textarea>
+                    <button class="w-full bg-[#c9956b] text-black font-bold py-5 rounded-2xl hover:bg-white transition shadow-xl flex items-center justify-center gap-3">
+                        Kirim Ucapan <i data-lucide="send" class="w-4"></i>
                     </button>
                 </form>
 
-                <div id="wishes-list" class="mt-16 space-y-6 max-h-[500px] overflow-y-auto pr-2"></div>
+                <div class="mt-16 flex items-center gap-4 mb-6">
+                    <h3 class="text-xl font-bold">Pesan & Doa</h3>
+                    <span id="wish-count" class="bg-[#c9956b] text-black text-[10px] px-3 py-1 rounded-full font-bold">0</span>
+                </div>
+                <div id="wishes-list" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scroll"></div>
             </div>
         </section>
 
-        <footer class="py-20 text-center opacity-30 text-[10px] tracking-[0.5em] uppercase">
-            <p>Built for Rizky & Amelia</p>
+        <footer class="section-padding text-center bg-black">
+            <div class="reveal">
+                <p class="text-sm opacity-60 mb-8 italic">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu kepada kami.</p>
+                <h2 class="text-4xl font-['Great_Vibes'] text-[#c9956b] mb-4">Rizky & Amelia</h2>
+                <p class="text-[10px] tracking-[0.5em] opacity-40 uppercase mt-12">© 2025 Wedding Invitation</p>
+            </div>
         </footer>
     </div>
 
-    <nav id="floating-nav" class="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-full z-[1000] opacity-0 pointer-events-none transition-all duration-700">
-        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition" onclick="scrollToSec('hero')"><i data-lucide="heart" class="w-5"></i></button>
-        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition" onclick="scrollToSec('timer')"><i data-lucide="clock" class="w-5"></i></button>
-        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition" onclick="scrollToSec('gift')"><i data-lucide="wallet" class="w-5"></i></button>
-        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition" onclick="scrollToSec('rsvp')"><i data-lucide="message-circle" class="w-5"></i></button>
+    <nav id="floating-nav" class="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 backdrop-blur-2xl border border-white/10 p-2 rounded-full z-[1000] opacity-0 transition-all duration-1000">
+        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition hover:text-[#c9956b]" onclick="scrollToId('opening')"><i data-lucide="home" class="w-4"></i></button>
+        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition hover:text-[#c9956b]" onclick="scrollToId('couple')"><i data-lucide="users" class="w-4"></i></button>
+        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition hover:text-[#c9956b]" onclick="scrollToId('event')"><i data-lucide="calendar" class="w-4"></i></button>
+        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition hover:text-[#c9956b]" onclick="scrollToId('gallery')"><i data-lucide="image" class="w-4"></i></button>
+        <button class="nav-btn w-12 h-12 rounded-full flex items-center justify-center transition hover:text-[#c9956b]" onclick="scrollToId('rsvp')"><i data-lucide="message-square" class="w-4"></i></button>
     </nav>
 
     <script>
-        // DATA SDK INTEGRATION (TETAP)
+        // -- DATA SDK INTEGRATION --
         const sdk = window.dataSdk;
-        let lastWishCount = 0;
+        let wishes = [];
 
-        // REAL-TIME AUTO FEATURES
-        function initRealTime() {
-            // Greeting berdasarkan waktu
+        // -- 1. INITIAL LOAD & URL PARAMS --
+        window.onload = () => {
             const hr = new Date().getHours();
-            const text = hr < 12 ? "Selamat Pagi" : hr < 15 ? "Selamat Siang" : hr < 18 ? "Selamat Sore" : "Selamat Malam";
-            document.getElementById('greeting').innerText = text;
+            document.getElementById('greeting-time').innerText = hr < 12 ? "Selamat Pagi" : hr < 15 ? "Selamat Siang" : hr < 18 ? "Selamat Sore" : "Selamat Malam";
+            
+            const to = new URLSearchParams(window.location.search).get('to');
+            if(to) document.getElementById('guest-name').innerText = to;
 
-            // Guest Name dari URL
-            const name = new URLSearchParams(window.location.search).get('to') || "Tamu Undangan";
-            document.getElementById('guest-name').innerText = name;
-        }
-
-        // CANVAS PARTICLES (OTOMATIS)
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-
-        function initParticles() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            for(let i=0; i<30; i++) particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                r: Math.random() * 3 + 1,
-                d: Math.random() * 1,
-                s: Math.random() * 1 + 0.5
-            });
-        }
-
-        function drawParticles() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "rgba(201, 149, 107, 0.3)";
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-                ctx.fill();
-                p.y += p.s;
-                if(p.y > canvas.height) p.y = -10;
-            });
-            requestAnimationFrame(drawParticles);
-        }
-
-        // TOAST NOTIFICATION (REAL-TIME)
-        function showToast(name) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerHTML = `<i data-lucide='user' class='w-3 h-3 inline mr-2'></i> ${name} mengirim ucapan baru!`;
-            container.appendChild(toast);
+            initParticles();
             lucide.createIcons();
-            setTimeout(() => toast.remove(), 4000);
-        }
 
-        // CONTROL LOGIC
+            sdk.init({
+                onDataChanged: (data) => {
+                    wishes = data;
+                    document.getElementById('wish-count').innerText = data.length;
+                    renderWishes();
+                }
+            });
+        };
+
+        // -- 2. OPENING LOGIC --
         function openEnvelope() {
             document.getElementById('flap').classList.add('open');
-            document.getElementById('envelope-text').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('open-btn').classList.remove('hidden');
-                document.getElementById('open-btn').classList.add('block');
             }, 600);
         }
 
@@ -240,42 +299,18 @@
             document.getElementById('cover-page').classList.add('hidden');
             document.getElementById('main-content').style.display = 'block';
             document.getElementById('floating-nav').style.opacity = '1';
-            document.getElementById('floating-nav').style.pointerEvents = 'auto';
-            document.getElementById('music-control').style.display = 'flex';
+            document.getElementById('music-control').classList.remove('hidden');
             
-            const music = document.getElementById('bg-music');
-            music.play();
+            const m = document.getElementById('bg-music');
+            m.play().catch(() => console.log("User must interact first"));
             
-            // Auto-typing effect
-            let i = 0; const txt = "Rizky & Amelia";
-            function type() { if(i < txt.length) { document.getElementById('auto-type').innerHTML += txt.charAt(i); i++; setTimeout(type, 150); } }
-            type();
-
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#c9956b', '#ffffff'] });
             
             startCountdown();
-            initObserver();
+            initReveal();
         }
 
-        function toggleMusic() {
-            const m = document.getElementById('bg-music');
-            const icon = document.getElementById('music-icon');
-            if(m.paused) { m.play(); icon.classList.add('rotating'); }
-            else { m.pause(); icon.classList.remove('rotating'); }
-        }
-
-        function startCountdown() {
-            const target = new Date("August 15, 2025 08:00:00").getTime();
-            setInterval(() => {
-                const now = new Date().getTime();
-                const diff = target - now;
-                document.getElementById('d').innerText = Math.floor(diff / (1000*60*60*24));
-                document.getElementById('h').innerText = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
-                document.getElementById('m').innerText = Math.floor((diff%(1000*60*60))/(1000*60));
-                document.getElementById('s').innerText = Math.floor((diff%(1000*60))/1000);
-            }, 1000);
-        }
-
+        // -- 3. REAL-TIME RSVP --
         async function handleRSVP(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
@@ -283,63 +318,86 @@
             try {
                 await sdk.create({ name, message });
                 document.getElementById('rsvp-form').reset();
-                confetti({ particleCount: 100, velocity: 30, spread: 360, colors: ['#c9956b'] });
-            } catch(e) { console.error(e); }
+                confetti({ particleCount: 80, spread: 50, origin: { y: 0.8 }, colors: ['#c9956b'] });
+            } catch(err) { console.error(err); }
         }
 
-        function syncScroll() {
-            const sections = ['hero', 'timer', 'gift', 'rsvp'];
-            sections.forEach(id => {
+        function renderWishes() {
+            const list = document.getElementById('wishes-list');
+            list.innerHTML = wishes.map(w => `
+                <div class="bg-white/5 p-6 rounded-3xl border border-white/5 shadow-xl transition hover:border-[#c9956b]/30">
+                    <p class="text-[#c9956b] font-bold text-sm mb-1 uppercase tracking-tighter">${w.name}</p>
+                    <p class="text-[13px] opacity-70 leading-relaxed italic">"${w.message}"</p>
+                </div>
+            `).reverse().join('');
+        }
+
+        // -- 4. UTILS (MUSIC, SCROLL, COUNTDOWN) --
+        function toggleMusic() {
+            const m = document.getElementById('bg-music');
+            const icon = document.getElementById('music-icon');
+            if(m.paused) { m.play(); icon.classList.add('animate-spin'); }
+            else { m.pause(); icon.classList.remove('animate-spin'); }
+        }
+
+        function startCountdown() {
+            const target = new Date("August 15, 2025 08:00:00").getTime();
+            setInterval(() => {
+                const diff = target - new Date().getTime();
+                if(diff < 0) return;
+                document.getElementById('d').innerText = Math.floor(diff / 86400000);
+                document.getElementById('h').innerText = Math.floor((diff % 86400000) / 3600000);
+                document.getElementById('m').innerText = Math.floor((diff % 3600000) / 60000);
+                document.getElementById('s').innerText = Math.floor((diff % 60000) / 1000);
+            }, 1000);
+        }
+
+        function initReveal() {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        function syncNav() {
+            const secs = ['opening', 'couple', 'event', 'gallery', 'rsvp'];
+            secs.forEach(id => {
                 const rect = document.getElementById(id).getBoundingClientRect();
                 if(rect.top >= 0 && rect.top <= 400) {
                     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelector(`[onclick="scrollToSec('${id}')"]`).classList.add('active');
+                    document.querySelector(`[onclick="scrollToId('${id}')"]`).classList.add('active');
                 }
             });
         }
 
-        function scrollToSec(id) {
+        function scrollToId(id) {
             document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
         }
 
         function copyAcc(num) {
             navigator.clipboard.writeText(num);
-            alert("Nomor rekening berhasil disalin!");
+            alert("Nomor rekening disalin!");
         }
 
-        function initObserver() {
-            const obs = new IntersectionObserver(e => {
-                e.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('visible'); });
-            }, {threshold: 0.1});
-            document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+        // -- 5. PARTICLES BACKGROUND --
+        function initParticles() {
+            const c = document.getElementById('bg-canvas');
+            const ctx = c.getContext('2d');
+            let pts = [];
+            c.width = window.innerWidth;
+            c.height = window.innerHeight;
+            for(let i=0; i<40; i++) pts.push({ x: Math.random()*c.width, y: Math.random()*c.height, s: Math.random()*0.5+0.2, r: Math.random()*2 });
+            function anim() {
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.fillStyle = "rgba(201, 149, 107, 0.4)";
+                pts.forEach(p => {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+                    p.y += p.s; if(p.y > c.height) p.y = -10;
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
         }
-
-        window.onload = () => {
-            initRealTime();
-            initParticles();
-            drawParticles();
-            lucide.createIcons();
-
-            sdk.init({
-                onDataChanged: (data) => {
-                    document.getElementById('wish-count').innerText = data.length;
-                    
-                    // Notifikasi Real-time jika ada data baru
-                    if(data.length > lastWishCount && lastWishCount !== 0) {
-                        showToast(data[data.length-1].name);
-                    }
-                    lastWishCount = data.length;
-
-                    const list = document.getElementById('wishes-list');
-                    list.innerHTML = data.map(w => `
-                        <div class="bg-white/5 p-6 rounded-3xl border border-white/5 shadow-xl">
-                            <p class="text-[#c9956b] font-bold text-sm mb-1">${w.name}</p>
-                            <p class="text-[13px] opacity-70 italic">"${w.message}"</p>
-                        </div>
-                    `).reverse().join('');
-                }
-            });
-        };
     </script>
 </body>
 </html>
